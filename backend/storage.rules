@@ -1,0 +1,48 @@
+rules_version = '2';
+
+service firebase.storage {
+  match /b/{bucket}/o {
+    //TODO:
+
+# Storage
+
+rules_version = '2';
+service firebase.storage {
+  match /b/{bucket}/o {
+
+    function isSignedIn() { return request.auth != null; }
+
+    function isImage() {
+      return request.resource != null
+        && request.resource.contentType.matches('image/.*');
+    }
+
+    function isSmallEnough() {
+      return request.resource.size < 1 * 1024 * 1024; // 1MB
+    }
+
+    // Articles thumbnails: media/articles/{postId}.jpg
+    match /media/articles/{fileName} {
+      allow read: if true;
+      allow write: if isSignedIn() && isImage() && isSmallEnough();
+    }
+
+    // Avatars: media/avatars/{uid}.jpg
+    match /media/avatars/{fileName} {
+      allow read: if true;
+
+      allow write: if isSignedIn()
+        && isImage()
+        && isSmallEnough()
+        // enforce "only my own avatar file"
+        && fileName.matches('^' + request.auth.uid + '\\.jpg$');
+    }
+
+    // Everything else locked
+    match /{allPaths=**} {
+      allow read, write: if false;
+    }
+  }
+}
+    }
+}

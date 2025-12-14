@@ -1,0 +1,93 @@
+rules_version = '2';
+
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isSignedIn() { return request.auth != null; }
+    function isOwner(uid) { return isSignedIn() && request.auth.uid == uid; }
+
+    function nonEmptyString(v, maxLen) {
+      return v is string && v.size() > 0 && v.size() <= maxLen;
+    }
+
+    function isHttpsUrl(v) {
+      return v is string && v.matches('^https://.*');
+    }
+
+    function validThumbnailPath(v) {
+      // store Storage fullPath like "media/articles/<id>.jpg"
+      return nonEmptyString(v, 500) && v.matches('^media/articles/.*');
+    }
+
+    // USERS
+    match /users/{uid} {
+      // Si tu "public_profile_screen" muestra otros perfiles, dejalo público:
+      allow read: if true;
+      allow write: if isOwner(uid);
+    }
+
+    match /posts/{postId} {
+  allow read: if true;
+
+  allow create: if isSignedIn()
+    && request.resource.data.keys().hasOnly([
+      'authorId','authorName','authorAvatarUrl',
+      'title','content','thumbnailPath',
+      'createdAtIso','createdAtClient','createdAt'
+    ])
+    && request.resource.data.authorId == request.auth.uid
+    && nonEmptyString(request.resource.data.title, 120)
+    && nonEmptyString(request.resource.data.content, 20000)
+    && validThumbnailPath(request.resource.data.thumbnailPath)
+    && request.resource.data.createdAtClient is int
+    && request.resource.data.createdAt is timestamp
+    && (!('authorName' in request.resource.data) || request.resource.data.authorName is string)
+    && (!('authorAvatarUrl' in request.resource.data) || request.resource.data.authorAvatarUrl is string)
+    && (!('createdAtIso' in request.resource.data) || request.resource.data.createdAtIso is string);
+
+  allow update: if isSignedIn()
+    && resource.data.authorId == request.auth.uid
+    && request.resource.data.authorId == resource.data.authorId
+    && (!('title' in request.resource.data) || nonEmptyString(request.resource.data.title, 120))
+    && (!('content' in request.resource.data) || nonEmptyString(request.resource.data.content, 20000))
+    && (!('thumbnailPath' in request.resource.data) || validThumbnailPath(request.resource.data.thumbnailPath))
+    && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp)
+    && (!('updatedAtClient' in request.resource.data) || request.resource.data.updatedAtClient is int)
+    && (!('createdAt' in request.resource.data)); // no permitir cambiarlo
+
+  allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+}
+
+    // POSTS (HBB user-generated)
+    match /posts/{postId} {
+      allow read: if true;
+
+      allow create: if isSignedIn()
+        && request.resource.data.keys().hasOnly([
+          'authorId','title','content','thumbnailPath','createdAt','updatedAt','kind'
+        ])
+        && request.resource.data.authorId == request.auth.uid
+        && request.resource.data.kind == 'hbb'
+        && nonEmptyString(request.resource.data.title, 120)
+        && nonEmptyString(request.resource.data.content, 20000)
+        && validThumbnailPath(request.resource.data.thumbnailPath)
+        && request.resource.data.createdAt is timestamp
+        && (!('updatedAt' in request.resource.data) || request.resource.data.updatedAt is timestamp);
+
+      allow update: if isSignedIn()
+        && resource.data.authorId == request.auth.uid
+        && request.resource.data.authorId == resource.data.authorId
+        && (!('title' in request.resource.data) || nonEmptyString(request.resource.data.title, 120))
+        && (!('content' in request.resource.data) || nonEmptyString(request.resource.data.content, 20000))
+        && (!('thumbnailPath' in request.resource.data) || validThumbnailPath(request.resource.data.thumbnailPath))
+        && (!('kind' in request.resource.data) || request.resource.data.kind == 'hbb');
+
+      allow delete: if isSignedIn() && resource.data.authorId == request.auth.uid;
+    }
+
+    // lock down everything else
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
