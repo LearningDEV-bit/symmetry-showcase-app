@@ -1,0 +1,47 @@
+{
+  "project_info": {
+    "project_number": "487721082510",
+    "project_id": "symmetryt-49e12",
+    "storage_bucket": "symmetryt-49e12.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:487721082510:android:c2da2775463868c18833df",
+        "android_client_info": {
+          "package_name": "com.example.news_app_clean_architecture"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "487721082510-3f51183f355tg7qrkfe9bhk43kafncqd.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.news_app_clean_architecture",
+            "certificate_hash": "da3d0907a6e3d2cdaa0d486db677ef9842e6be15"
+          }
+        },
+        {
+          "client_id": "487721082510-jasrsgiqrimf8s2lilqnojeib5h9lpj7.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCRpUfjCgKF7Bjd0xWtUbBdUhdV99GrZM4"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "487721082510-jasrsgiqrimf8s2lilqnojeib5h9lpj7.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
